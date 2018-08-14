@@ -4,6 +4,8 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import SafeAreaView from 'react-native-safe-area-view'
+import Flag from 'react-native-flags';
+// import * as flags from '../assets/flags';
 
 import {
   StyleSheet,
@@ -25,22 +27,27 @@ import { getHeightPercent } from './ratio'
 import CloseButton from './CloseButton'
 import countryPickerStyles from './CountryPicker.style'
 import KeyboardAvoidingView from './KeyboardAvoidingView'
+import { Icon } from 'react-native-elements'
 
 let countries = null
 let Emoji = null
 let styles = {}
 
 let isEmojiable = Platform.OS === 'ios'
+let flagImages = false;
 
 const FLAG_TYPES = {
   flat: 'flat',
-  emoji: 'emoji'
+  emoji: 'emoji',
+  highQuality: 'highQuality'
 }
 
 const setCountries = flagType => {
   if (typeof flagType !== 'undefined') {
     isEmojiable = flagType === FLAG_TYPES.emoji
   }
+
+  flagImages = flagType === FLAG_TYPES.highQuality;
 
   if (isEmojiable) {
     countries = require('../data/countries-emoji')
@@ -82,7 +89,7 @@ export default class CountryPicker extends Component {
     hideAlphabetFilter: PropTypes.bool,
     renderFilter: PropTypes.func,
     showCallingCode: PropTypes.bool,
-    filterOptions: PropTypes.object
+    filterOptions: PropTypes.object,
   }
 
   static defaultProps = {
@@ -106,7 +113,16 @@ export default class CountryPicker extends Component {
   }
 
   static renderImageFlag(cca2, imageStyle) {
+
     return cca2 !== '' ? (
+      // <View style={{height:32, width:32 , borderRadius:16, borderWidth:2}}>
+      //   <Flag
+      //     code={cca2}
+      //     size={64}
+      //     type="flat"
+      //     style={{ height: 32, width: 32, resizeMode:'contain' }}
+      //   />
+      // </View>
       <Image
         style={[countryPickerStyles.imgStyle, imageStyle]}
         source={{ uri: countries[cca2].flag }}
@@ -120,6 +136,8 @@ export default class CountryPicker extends Component {
         {isEmojiable
           ? CountryPicker.renderEmojiFlag(cca2, emojiStyle)
           : CountryPicker.renderImageFlag(cca2, imageStyle)}
+
+
       </View>
     )
   }
@@ -325,15 +343,16 @@ export default class CountryPicker extends Component {
     const country = countries[cca2]
     return (
       <View style={styles.itemCountry}>
-        {CountryPicker.renderFlag(cca2)}
         <View style={styles.itemCountryName}>
           <Text style={styles.countryName} allowFontScaling={false}>
             {this.getCountryName(country)}
             {this.props.showCallingCode &&
-            country.callingCode &&
-            <Text>{` (+${country.callingCode})`}</Text>}
+              country.callingCode &&
+              <Text>{` (+${country.callingCode})`}</Text>}
           </Text>
         </View>
+        {CountryPicker.renderFlag(cca2)}
+
       </View>
     )
   }
@@ -353,16 +372,16 @@ export default class CountryPicker extends Component {
     return renderFilter ? (
       renderFilter({ value, onChange, onClose })
     ) : (
-      <TextInput
-        autoFocus={autoFocusFilter}
-        autoCorrect={false}
-        placeholder={filterPlaceholder}
-        placeholderTextColor={filterPlaceholderTextColor}
-        style={[styles.input, !this.props.closeable && styles.inputOnly]}
-        onChangeText={onChange}
-        value={value}
-      />
-    )
+        <TextInput
+          autoFocus={autoFocusFilter}
+          autoCorrect={false}
+          placeholder={filterPlaceholder}
+          placeholderTextColor={filterPlaceholderTextColor}
+          style={[styles.input, !this.props.closeable && styles.inputOnly]}
+          onChangeText={onChange}
+          value={value}
+        />
+      )
   }
 
   render() {
@@ -376,15 +395,15 @@ export default class CountryPicker extends Component {
           {this.props.children ? (
             this.props.children
           ) : (
-            <View
-              style={[styles.touchFlag, { marginTop: isEmojiable ? 0 : 5 }]}
-            >
-              {CountryPicker.renderFlag(this.props.cca2,
-                styles.itemCountryFlag,
-                styles.emojiFlag,
-                styles.imgStyle)}
-            </View>
-          )}
+              <View
+                style={[styles.touchFlag, { marginTop: isEmojiable ? 0 : 5 }]}
+              >
+                {CountryPicker.renderFlag(this.props.cca2,
+                  styles.itemCountryFlag,
+                  styles.emojiFlag,
+                  styles.imgStyle)}
+              </View>
+            )}
         </TouchableOpacity>
         <Modal
           transparent={this.props.transparent}
@@ -395,14 +414,24 @@ export default class CountryPicker extends Component {
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.header}>
               {this.props.closeable && (
-                <CloseButton
-                  image={this.props.closeButtonImage}
-                  styles={[styles.closeButton, styles.closeButtonImage]}
-                  onPress={() => this.onClose()}
-                />
+                <Icon type="ionicon"
+                  size={30}
+                  name="md-close"
+                  onPress={() => this.onClose()} />
               )}
-              {this.props.filterable && this.renderFilter()}
             </View>
+            <Text style={styles.searchTitle}>Countries</Text>
+            {this.props.filterable &&
+              <View style={styles.filterableRow}>
+                <Icon type="ionicon"
+                  size={30}
+                  color="#CACACA"
+                  name="md-search"
+                  onPress={() => this.onClose()} />
+                {this.renderFilter()}
+
+              </View>
+            }
             <KeyboardAvoidingView behavior="padding">
               <View style={styles.contentContainer}>
                 <ListView
@@ -413,6 +442,7 @@ export default class CountryPicker extends Component {
                   renderRow={country => this.renderCountry(country)}
                   initialListSize={30}
                   pageSize={15}
+                  showsVerticalScrollIndicator={false}
                   onLayout={({ nativeEvent: { layout: { y: offset } } }) =>
                     this.setVisibleListHeight(offset)
                   }
