@@ -15,7 +15,7 @@ import {
   Modal,
   Text,
   TextInput,
-  ListView,
+  FlatList,
   ScrollView,
   Platform
 } from 'react-native'
@@ -58,7 +58,7 @@ const setCountries = flagType => {
   }
 }
 
-const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 })
+const ds = new FlatList.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 })
 
 setCountries()
 
@@ -434,7 +434,7 @@ export default class CountryPicker extends Component {
             }
             <KeyboardAvoidingView behavior="padding">
               <View style={styles.contentContainer}>
-                <ListView
+                <FlatList
                   keyboardShouldPersistTaps="always"
                   enableEmptySections
                   ref={listView => (this._listView = listView)}
